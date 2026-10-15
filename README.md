@@ -162,8 +162,10 @@ What was actually run, and what was not:
   | both de-duplication guards in concurrent pruning removed | `testConcurrentPrunesOverEarlierProcessSagasDoNotDeadlock` *hangs* (self-deadlock). It was killed by a 150 s timeout |
 
 - **Independent review:** an Opus reviewer with no part in writing the code graded it against a written checklist. Round 1 failed it with two blockers (the pivot-doubt window above, reproduced end to end in the demo) and six major issues. Round 2 confirmed those were fixed, then found one new major issue: after a crash between `stepFailed(permanent: true)` and its follow-up record, recovery re-sent a request the server had already declined. It also found documentation gaps. Round 3, the last round this pipeline allows, confirmed every round-2 item fixed except one. It then found a real deadlock: two overlapping prunes could each pick up the same saga left by an earlier process and insert it twice, and the batched remove would then take that saga's lock twice. It also flagged a scheduling-dependent test and some doc nits. All of these were fixed before anything was pushed. There is a regression test and a mutation check (table above). **These final round-3 fixes were not independently re-reviewed.**
-- **CI:** _(filled in from the Actions tab once it has run)_
-- **Not done:** the companion demo app has **not** been launched on a Simulator by the author (see its README).
+- **CI** ([Actions](https://github.com/rajatslakhina/durable-saga-kit/actions)), two jobs on every push:
+  - Linux, `swift:6.0` container: `swift build -Xswiftc -warnings-as-errors`, then `swift test` (66 tests, 0 failures on the `v1.0.0` commit).
+  - macOS 15, Xcode 16.4: `swift test` (66 tests, 0 failures), then `xcodebuild` for `generic/platform=iOS Simulator`.
+- **On a Simulator:** the companion demo app, built against `v1.0.0` from GitHub, was run on an iPhone 17 Pro Simulator (iOS 26.3) from Xcode 26.3. That run covered the happy path, kill-and-relaunch recovery, and park-and-revive. Screenshots are in [its README](https://github.com/rajatslakhina/durable-saga-demo-app#screenshots).
 
 ## License
 
