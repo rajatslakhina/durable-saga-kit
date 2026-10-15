@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  linux:
+    name: Linux · Swift 6.0 · build (warnings as errors) + test
+    runs-on: ubuntu-latest
+    container: swift:6.0
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build (warnings are errors)
+        run: swift build -Xswiftc -warnings-as-errors
+      - name: Test
+        run: swift test -Xswiftc -warnings-as-errors
+
+  apple:
+    name: macOS 15 · test + iOS Simulator build
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+      - name: Toolchain
+        run: xcodebuild -version && swift --version
+      - name: Test (macOS)
+        run: swift test -Xswiftc -warnings-as-errors
+      - name: Build for iOS Simulator
+        run: xcodebuild build -scheme DurableSaga -destination 'generic/platform=iOS Simulator' -skipPackagePluginValidation
